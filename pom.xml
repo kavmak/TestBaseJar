@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.5.7</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.example</groupId>
+	<artifactId>testbaseclass</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>jar-base-full-file</name>
+	 <description>Reusable Spring Boot Integration Test Base Library (H2 + MockMvc + Utilities)</description>
+
+	<properties>
+		<java.version>21</java.version>
+    <maven.build.timestamp.format>yyyy-MM-dd_HH-mm-ss</maven.build.timestamp.format>
+	<testcontainers.version>1.19.0</testcontainers.version>
+
+	</properties>
+	<dependencies>
+    <!-- Spring Boot -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <!-- JPA -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+
+    <!-- H2 for local tests -->
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <!-- <scope>runtime</scope> -->
+    </dependency>
+
+    <!-- Testcontainers (Postgres) -->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>${testcontainers.version}</version>
+      <!-- <scope>test</scope> -->
+    </dependency>
+	
+	   <!-- ✅ Add this: Spring Boot Test (for @TestConfiguration) -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-test</artifactId>
+        <scope>compile</scope>
+    </dependency>
+
+    <!-- ✅ Add this: Testcontainers Core (for PostgreSQLContainer) -->
+    <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers</artifactId>
+        <version>${testcontainers.version}</version>
+        <!-- <scope>test</scope> -->
+    </dependency>
+
+    <!-- Postgres driver (for runtime/testcontainers) -->
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+    </dependency>
+
+    <!-- Testing -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.junit.vintage</groupId>
+          <artifactId>junit-vintage-engine</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- Jackson -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+
+    <!-- lombok (optional) -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+	<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-validation</artifactId>
+</dependency>
+
+  </dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+                    <skip>true</skip> <!-- Disable Boot repackage -->
+                </configuration>
+			</plugin>
+
+      <plugin>
+  <groupId>org.jacoco</groupId>
+  <artifactId>jacoco-maven-plugin</artifactId>
+  <version>0.8.12</version>
+
+  <executions>
+    <!-- Step 1️⃣: Attach the JaCoCo agent before tests -->
+    <execution>
+      <id>prepare-agent</id>
+      <goals>
+        <goal>prepare-agent</goal>
+      </goals>
+      <configuration>
+        <!-- Optional: save .exec file for analysis tools -->
+        <destFile>${project.build.directory}/jacoco.exec</destFile>
+        <append>true</append>
+      </configuration>
+    </execution>
+
+    <!-- Step 2️⃣: Generate the JaCoCo report after tests -->
+    <execution>
+      <id>report</id>
+      <phase>test</phase>
+      <goals>
+        <goal>report</goal>
+      </goals>
+      <configuration>
+        <dataFile>${project.build.directory}/jacoco.exec</dataFile>
+        <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
+        <reports>
+          <report>
+            <outputEncoding>UTF-8</outputEncoding>
+            <name>JaCoCo Coverage Report</name>
+          </report>
+        </reports>
+      </configuration>
+    </execution>
+
+    <!-- Step 3️⃣ (Optional): Fail build if coverage below 80% -->
+    <execution>
+      <id>check</id>
+      <goals>
+        <goal>check</goal>
+      </goals>
+      <configuration>
+        <rules>
+          <rule>
+            <element>BUNDLE</element>
+            <limits>
+              <limit>
+                <counter>LINE</counter>
+                <value>COVEREDRATIO</value>
+                <minimum>0.80</minimum>
+              </limit>
+              <limit>
+                <counter>BRANCH</counter>
+                <value>COVEREDRATIO</value>
+                <minimum>0.70</minimum>
+              </limit>
+            </limits>
+          </rule>
+        </rules>
+      </configuration>
+    </execution>
+  </executions>
+</plugin>
+
+
+<plugin>
+    <artifactId>maven-antrun-plugin</artifactId>
+    <version>3.1.0</version>
+    <executions>
+        <execution>
+            <id>copy-coverage-report</id>
+            <phase>verify</phase>
+            <configuration>
+                <target>
+                    <echo>📁 Copying Jacoco report (if exists)...</echo>
+
+                    <!-- copy folder only if exists -->
+                    <copy todir="${project.basedir}/src/main/resources/static/coverage"
+                          failonerror="false">
+                        <fileset dir="${project.reporting.outputDirectory}/jacoco" />
+                    </copy>
+
+                </target>
+            </configuration>
+            <goals>
+                <goal>run</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+
+
+
+		</plugins>
+	</build>
+<reporting>
+  <plugins>
+    <plugin>
+      <groupId>org.jacoco</groupId>
+      <artifactId>jacoco-maven-plugin</artifactId>
+      <reportSets>
+        <reportSet>
+          <reports>
+            <report>report</report>
+          </reports>
+        </reportSet>
+      </reportSets>
+    </plugin>
+
+	<plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+  <artifactId>maven-jar-plugin</artifactId>
+  <version>3.3.0</version>
+  <configuration>
+    <archive>
+      <manifest>
+        <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+      </manifest>
+    </archive>
+  </configuration>
+</plugin>
+
+  </plugins>
+</reporting>
+
+
+</project>
