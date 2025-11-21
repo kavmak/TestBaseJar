@@ -81,7 +81,7 @@
     email VARCHAR(255)
     );
 
-  # Sample users.json
+  # Sample data.json
 
     [
     { "name": "Alice", "email": "alice@example.com" },
